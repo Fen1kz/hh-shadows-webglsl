@@ -33,7 +33,7 @@
 
         var stage = new PIXI.Container();
         stage.addChild(background);
-        stage.addChild(shadowCasters); // Будет удалено, пока просто посмотреть.
+        stage.addChild(shadowCasters);
         stage.addChild(lights[0]);
         stage.addChild(lights[1]);
 
