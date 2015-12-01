@@ -22,13 +22,17 @@
         lights[1] = new PIXI.Graphics();
         lights[1].beginFill(0xFFFF00);
         lights[1].drawCircle(50, 50, 10);
+        var background = new PIXI.Graphics();
+        background.beginFill(0x999999);
+        background.drawRect(0, 0, WIDTH, HEIGHT); // x, y, width, height
 
-        var background = PIXI.Sprite.fromImage('img/back.png'); // Фон
+        var shadowCastImage = PIXI.Sprite.fromImage('img/back.png'); // Отбрасывающая тень картинка с объектами (черным)
 
         var shadowCasters = new PIXI.Container(); // Контейнер для всех, кто отбрасывает тень
-        shadowCasters.addChild(background); // Собственно её будет отбрасывать только фон
+        shadowCasters.addChild(shadowCastImage); // Добавляем туда нашу картинку.
 
         var stage = new PIXI.Container();
+        stage.addChild(background);
         stage.addChild(shadowCasters); // Будет удалено, пока просто посмотреть.
         stage.addChild(lights[0]);
         stage.addChild(lights[1]);
