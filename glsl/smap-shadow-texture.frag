@@ -1,15 +1,18 @@
+// Шейдер для создания карты теней:
+
 precision mediump float;
 
-varying vec2 vTextureCoord;
-uniform sampler2D uSampler;
+//Объявляем переданные uniform'ы
+varying vec2 vTextureCoord; // Координата
+uniform sampler2D uSampler; // Текстура на которую наложен фильтр (не используется)
 
-uniform vec2 viewResolution;
-uniform vec2 rtSize;
+uniform vec2 viewResolution; // Разрешение вьюшки
+uniform vec2 rtSize; // Размер renderTarget
 
 uniform vec4 uLightPosition[CONST_LIGHTS_COUNT]; //x,y = координаты, z = размер
 uniform vec4 uLightColor[CONST_LIGHTS_COUNT]; //На всякий случай
 
-uniform sampler2D uShadowCastersTexture;
+uniform sampler2D uShadowCastersTexture; // Отсюда мы будем брать данные -- есть препятствие или нет.
 
 const float PI = 3.14159265358979;
 const float STEPS = 256.0;
@@ -42,5 +45,6 @@ void main(void) {
             break;
         }
     }
+    // Дистанция получается в пикселях, сохраняем её в отрезке 0..1
     gl_FragColor = vec4(vec3(0.0), dst / lightSize);
 }
