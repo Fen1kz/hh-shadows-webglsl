@@ -48,11 +48,13 @@
             var pointer = renderer.plugins.interaction.mouse.global;
             lights[0].x = pointer.x;
             lights[0].y = pointer.y;
+            // Обновляем uniforms в шейдере
             filter.uniforms['uLightPosition[0]'].value[0] = lights[0].x;
             filter.uniforms['uLightPosition[0]'].value[1] = lights[0].y;
             filter.uniforms['uLightPosition[1]'].value[0] = lights[1].x;
             filter.uniforms['uLightPosition[1]'].value[1] = lights[1].y;
 
+            // Рендерим контейнер с препятствиями в renderTexture в фильтре.
             filter.render(shadowCasters);
 
             renderer.render(stage);
