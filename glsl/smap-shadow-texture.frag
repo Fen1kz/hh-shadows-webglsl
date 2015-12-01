@@ -19,8 +19,6 @@ const float STEPS = 256.0;
 const float THRESHOLD = .01;
 
 void main(void) {
-    vec2 relativeResolution = (max(viewResolution.x, viewResolution.y) / viewResolution); // см. статью
-
     int lightnum = int(floor(vTextureCoord.y * float(CONST_LIGHTS_COUNT))); // Определяем номер источника света по Y
     vec2 lightPosition;
     float lightSize;
@@ -35,10 +33,11 @@ void main(void) {
     for (float y = 0.0; y < STEPS; y += 1.0) { // И мелкими (с мелкостью (y / STEPS)) шагами идем во всех направлениях
         float distance = (y / STEPS); // Расстояния для теста
         float angle = vTextureCoord.x * (2.0 * PI); // Угол для теста
-         // По полярным координатам вычисляем пиксель для теста
+        // По полярным координатам вычисляем пиксель для теста
         vec2 coord = vec2(cos(angle) * distance, sin(angle) * distance);
-        coord = lightPosition + coord * relativeResolution;
-        coord = clamp(coord, 0., 1.);
+        coord *= (max(viewResolution.x, viewResolution.y) / viewResolution);  // Пропорции
+        coord += lightPosition; // Прибавляем координаты источника
+        coord = clamp(coord, 0., 1.); // Не выходим за пределы текстуры
         vec4 data = texture2D(uShadowCastersTexture, coord); // Находим пиксель
         if (data.a > THRESHOLD) { // Если есть препятствие, записываем расстояние и прекращаем поиск.
             dst = min(dst, distance);
