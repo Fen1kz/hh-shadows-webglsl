@@ -34,11 +34,12 @@
 
         var lightingRT = new PIXI.RenderTexture(renderer, WIDTH, HEIGHT);
         var lightingSprite = new PIXI.Sprite(lightingRT);
-        lightingSprite.filters = [createSMapFilter()];
+        var filter = createSMapFilter();
+        lightingSprite.filters = [filter];
 
         var stage = new PIXI.Container();
         stage.addChild(background);
-        // stage.addChild(shadowCasters); // Будет удалено, пока просто посмотреть.
+        stage.addChild(shadowCasters);
         stage.addChild(lightingSprite);
         stage.addChild(lights[0]);
         stage.addChild(lights[1]);
