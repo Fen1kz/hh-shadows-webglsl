@@ -9,6 +9,7 @@
         // Загружаем дополнительные файлы
         PIXI.loader
             .add('background', 'img/back.png')
+            .add('glslShadowTexture', 'glsl/smap-shadow-texture.frag')
             .once('complete', setup)
             .load();
     });
@@ -31,21 +32,31 @@
         var shadowCasters = new PIXI.Container(); // Контейнер для всех, кто отбрасывает тень
         shadowCasters.addChild(shadowCastImage); // Добавляем туда нашу картинку.
 
+        var lightingRT = new PIXI.RenderTexture(renderer, WIDTH, HEIGHT);
+        var lightingSprite = new PIXI.Sprite(lightingRT);
+        lightingSprite.filters = [createSMapFilter()];
+
         var stage = new PIXI.Container();
         stage.addChild(background);
-        stage.addChild(shadowCasters); // Будет удалено, пока просто посмотреть.
+        // stage.addChild(shadowCasters); // Будет удалено, пока просто посмотреть.
+        stage.addChild(lightingSprite);
         stage.addChild(lights[0]);
         stage.addChild(lights[1]);
 
         (function animate() {
-            // lights[0] будет бегать за мышкой.
             var pointer = renderer.plugins.interaction.mouse.global;
             lights[0].x = pointer.x;
             lights[0].y = pointer.y;
 
-            // Рендер
+            lightingRT.render(shadowCasters, null, true);
+
             renderer.render(stage);
             requestAnimationFrame(animate);
         })();
+    }
+
+    function createSMapFilter() {
+        var SMapFilter = new PIXI.AbstractFilter(null, PIXI.loader.resources.glslShadowTexture.data, {});
+        return SMapFilter;
     }
 })();
