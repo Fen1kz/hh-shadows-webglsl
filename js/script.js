@@ -36,6 +36,10 @@
         var lightingSprite = new PIXI.Sprite(lightingRT);
         lightingSprite.filters = [createSMapFilter()];
 
+        var lightingRT = new PIXI.RenderTexture(renderer, WIDTH, HEIGHT);
+        var lightingSprite = new PIXI.Sprite(lightingRT);
+        lightingSprite.filters = [createSMapFilter()];
+
         var stage = new PIXI.Container();
         stage.addChild(background);
         // stage.addChild(shadowCasters); // Будет удалено, пока просто посмотреть.
