@@ -60,7 +60,66 @@
     }
 
     function createSMapFilter() {
-        var SMapFilter = new PIXI.AbstractFilter(null, PIXI.loader.resources.glslShadowTexture.data, {});
+        var CONST_LIGHTS_COUNT = 2;
+        var SMapFilter = new PIXI.AbstractFilter(null, null, { // Заметьте, шейдера здесь больше нет, это фильтр "обертка"
+            viewResolution: {type: '2fv', value: [WIDTH, HEIGHT]} // Передаем в фильтр размеры view
+            , rtSize: {type: '2fv', value: [1024, CONST_LIGHTS_COUNT]} // Передаем размеры карты теней.
+            , uAmbient: {type: '4fv', value: [.0, .0, .0, .0]} // И освещение "по дефолту", пускай будет ноль.
+        });
+        // Дополнительные глобалки для задания координат/цвета источников света:
+        for (var i = 0; i < CONST_LIGHTS_COUNT; ++i) {
+            SMapFilter.uniforms['uLightPosition[' + i + ']'] = {type: '4fv', value: [0, 0, 0, 1]};
+            SMapFilter.uniforms['uLightColor[' + i + ']'] = {type: '4fv', value: [1, 1, 1, 1]};
+        }
+
+        // Создаем специальный PIXI объект, куда будет рендериться карта теней
+        SMapFilter.renderTarget = new PIXI.RenderTarget(
+            renderer.gl
+            , SMapFilter.uniforms.rtSize.value[0]
+            , SMapFilter.uniforms.rtSize.value[1]
+            , PIXI.SCALE_MODES.LINEAR
+            , 1);
+        SMapFilter.renderTarget.transform = new PIXI.Matrix()
+            .scale(SMapFilter.uniforms.rtSize.value[0] / WIDTH
+                , SMapFilter.uniforms.rtSize.value[1] / HEIGHT);
+
+        // Текстура в которую мы будем рендерить препятствия:
+        SMapFilter.shadowCastersRT = new PIXI.RenderTexture(renderer, WIDTH, HEIGHT);
+        SMapFilter.uniforms.uShadowCastersTexture = {
+            type: 'sampler2D',
+            value: this.shadowCastersRT
+        };
+        // И метод для рендеринга:
+        SMapFilter.render = function (group) {
+            this.shadowCastersRT.render(group, null, true);
+        };
+
+        // Тестовый шейдер, не делающий ничего;
+        SMapFilter.testFilter = new PIXI.AbstractFilter(null, "precision highp float;"
+            + "varying vec2 vTextureCoord;"
+            + "uniform sampler2D uSampler;"
+            + "void main(void) {gl_FragColor = texture2D(uSampler, vTextureCoord);}");
+
+        // Шейдер, записывающий в renderTarget карту теней.
+        var filterShadowTextureSource = PIXI.loader.resources.glslShadowTexture.data;
+        // CONST_LIGHTS_COUNT должна быть известна на этапе компиляции и не может передаваться как uniform.
+        filterShadowTextureSource = filterShadowTextureSource.replace(/CONST_LIGHTS_COUNT/g, CONST_LIGHTS_COUNT);
+
+        // А также мы должны клонировать объект uniforms, этого требует WebGL.
+        var filterShadowTextureUniforms = Object.keys(SMapFilter.uniforms).reduce(function (c, k) {
+            c[k] = SMapFilter.uniforms[k];
+            return c;
+        }, {});
+        SMapFilter.filterShadowTexture = new PIXI.AbstractFilter(
+            null
+            , filterShadowTextureSource
+            , filterShadowTextureUniforms
+        );
+
+        SMapFilter.applyFilter = function (renderer, input, output) {
+            SMapFilter.filterShadowTexture.applyFilter(renderer, input, this.renderTarget, true);
+            SMapFilter.testFilter.applyFilter(renderer, this.renderTarget, output); // будет заменен на второй шейдер.
+        };
         return SMapFilter;
     }
 })();
