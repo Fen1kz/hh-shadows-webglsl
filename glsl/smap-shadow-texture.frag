@@ -9,11 +9,11 @@ uniform vec2 rtSize;
 uniform vec4 uLightPosition[CONST_LIGHTS_COUNT]; //x,y = координаты, z = размер
 uniform vec4 uLightColor[CONST_LIGHTS_COUNT]; //На всякий случай
 
-uniform sampler2D uLightMap;
+uniform sampler2D uShadowCastersTexture;
 
 const float PI = 3.14159265358979;
 const float STEPS = 256.0;
-const float THRESHOLD = .99;
+const float THRESHOLD = .01;
 
 void main(void) {
     vec2 relativeResolution = (max(viewResolution.x, viewResolution.y) / viewResolution); // см. статью
@@ -36,8 +36,8 @@ void main(void) {
         vec2 coord = vec2(cos(angle) * distance, sin(angle) * distance);
         coord = lightPosition + coord * relativeResolution;
         coord = clamp(coord, 0., 1.);
-        vec4 data = texture2D(uLightMap, coord); // Находим пиксель
-        if (data.r < THRESHOLD) { // Если есть препятствие, записываем расстояние и прекращаем поиск.
+        vec4 data = texture2D(uShadowCastersTexture, coord); // Находим пиксель
+        if (data.a > THRESHOLD) { // Если есть препятствие, записываем расстояние и прекращаем поиск.
             dst = min(dst, distance);
             break;
         }
