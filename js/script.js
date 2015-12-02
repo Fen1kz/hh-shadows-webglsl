@@ -113,7 +113,10 @@
 
         // А также мы должны клонировать объект uniforms, этого требует WebGL (на самом деле пока что клонировать не надо, но мы же допишем второй шейдер)
         var filterShadowTextureUniforms = Object.keys(SMapFilter.uniforms).reduce(function (c, k) {
-            c[k] = SMapFilter.uniforms[k];
+            c[k] = {
+                type: SMapFilter.uniforms[k].type
+                , value: SMapFilter.uniforms[k].value
+            };
             return c;
         }, {});
         SMapFilter.filterShadowTexture = new PIXI.AbstractFilter(
