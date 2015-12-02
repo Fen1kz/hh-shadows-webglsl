@@ -10,6 +10,7 @@
         PIXI.loader
             .add('background', 'img/back.png')
             .add('glslShadowTexture', 'glsl/smap-shadow-texture.frag')
+            .add('glslShadowCast', 'glsl/smap-shadow-cast.frag')
             .once('complete', setup)
             .load();
     });
@@ -31,6 +32,7 @@
 
         var shadowCasters = new PIXI.Container(); // Контейнер для всех, кто отбрасывает тень
         shadowCasters.addChild(shadowCastImage); // Добавляем туда нашу картинку.
+        shadowCasters.addChild(lights[1]); // Добавляем туда нашу картинку.
 
         var lightingRT = new PIXI.RenderTexture(renderer, WIDTH, HEIGHT);
         var lightingSprite = new PIXI.Sprite(lightingRT);
@@ -57,6 +59,8 @@
             // Рендерим контейнер с препятствиями в renderTexture в фильтре.
             filter.render(shadowCasters);
 
+            lightingRT.render(stage);
+
             renderer.render(stage);
             requestAnimationFrame(animate);
         })();
@@ -71,8 +75,8 @@
         });
         // Дополнительные глобалки для задания координат/цвета источников света:
         for (var i = 0; i < CONST_LIGHTS_COUNT; ++i) {
-            SMapFilter.uniforms['uLightPosition[' + i + ']'] = {type: '4fv', value: [0, 0, 256, 1]};
-            SMapFilter.uniforms['uLightColor[' + i + ']'] = {type: '4fv', value: [1, 1, 1, 1]};
+            SMapFilter.uniforms['uLightPosition[' + i + ']'] = {type: '4fv', value: [0, 0, 256, .3]};
+            SMapFilter.uniforms['uLightColor[' + i + ']'] = {type: '4fv', value: [1, 1, 1, .3]};
         }
 
         // Создаем специальный PIXI объект, куда будет рендериться карта теней
@@ -108,9 +112,12 @@
         // CONST_LIGHTS_COUNT должна быть известна на этапе компиляции и не может передаваться как uniform.
         filterShadowTextureSource = filterShadowTextureSource.replace(/CONST_LIGHTS_COUNT/g, CONST_LIGHTS_COUNT);
 
-        // А также мы должны клонировать объект uniforms, этого требует WebGL (на самом деле пока что клонировать не надо, но мы же допишем второй шейдер)
+        // А также мы должны клонировать объект uniforms, этого требует WebGL
         var filterShadowTextureUniforms = Object.keys(SMapFilter.uniforms).reduce(function (c, k) {
-            c[k] = SMapFilter.uniforms[k];
+            c[k] = {
+                type: SMapFilter.uniforms[k].type
+                , value: SMapFilter.uniforms[k].value
+            };
             return c;
         }, {});
         SMapFilter.filterShadowTexture = new PIXI.AbstractFilter(
@@ -119,9 +126,36 @@
             , filterShadowTextureUniforms
         );
 
+        // Добавляем шейдер, отбрасывающий тень:
+        // копируем uniforms
+        var filterShadowCastUniforms = Object.keys(SMapFilter.uniforms).reduce(function (c, k) {
+            c[k] = {
+                type: SMapFilter.uniforms[k].type
+                , value: SMapFilter.uniforms[k].value
+            };
+            return c;
+        }, {});
+        // грязный хак чтобы передать нашу карту теней как uniform
+        filterShadowCastUniforms.shadowMapChannel = {
+            type: 'sampler2D',
+            value: {
+                baseTexture: {
+                    hasLoaded: true
+                    , _glTextures: [SMapFilter.renderTarget.texture]
+                }
+            }
+        };
+        // и шейдер можно создавать
+        SMapFilter.filterShadowCast = new PIXI.AbstractFilter(
+            null
+            , PIXI.loader.resources.glslShadowCast.data.replace(/CONST_LIGHTS_COUNT/g, CONST_LIGHTS_COUNT)
+            , filterShadowCastUniforms
+        );
+
         SMapFilter.applyFilter = function (renderer, input, output) {
             SMapFilter.filterShadowTexture.applyFilter(renderer, input, SMapFilter.renderTarget, true);
-            SMapFilter.testFilter.applyFilter(renderer, SMapFilter.renderTarget, output); // будет заменен на второй шейдер.
+            //SMapFilter.testFilter.applyFilter(renderer, SMapFilter.renderTarget, output); // будет заменен на второй шейдер.
+            SMapFilter.filterShadowCast.applyFilter(renderer, input, output);
         };
         return SMapFilter;
     }
