@@ -31,8 +31,6 @@
         background.drawRect(0, 0, WIDTH, HEIGHT); // x, y, width, height
 
         var shadowCastImage = PIXI.Sprite.fromImage('img/maze.png'); // Отбрасывающая тень картинка с объектами (черным)
-        shadowCastImage.width = WIDTH;
-        shadowCastImage.height = HEIGHT;
 
         var shadowCasters = new PIXI.Container(); // Контейнер для всех, кто отбрасывает тень
         shadowCasters.addChild(shadowCastImage); // Добавляем туда нашу картинку.
@@ -66,6 +64,7 @@
             lightingRT.render(stage);
 
             renderer.render(stage);
+
             requestAnimationFrame(animate);
         })();
     }
