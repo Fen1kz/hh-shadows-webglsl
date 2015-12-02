@@ -47,7 +47,7 @@
 
             // Рендер
             renderer.render(stage);
-            
+
             requestAnimationFrame(animate);
         })();
     }
