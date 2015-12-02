@@ -8,7 +8,7 @@
 
         // Загружаем дополнительные файлы
         PIXI.loader
-            .add('background', 'img/back.png')
+            .add('background', 'img/maze.png')
             .once('complete', setup)
             .load();
     });
@@ -18,15 +18,17 @@
         var lights = []; // Лампочки
         lights[0] = new PIXI.Graphics();
         lights[0].beginFill(0xFFFF00);
-        lights[0].drawCircle(0, 0, 10); // x, y, radius
+        lights[0].drawCircle(0, 0, 4); // x, y, radius
         lights[1] = new PIXI.Graphics();
         lights[1].beginFill(0xFFFF00);
-        lights[1].drawCircle(50, 50, 10);
+        lights[1].drawCircle(0, 0, 4);
+        lights[1].x = 50;
+        lights[1].y = 50;
         var background = new PIXI.Graphics();
         background.beginFill(0x999999);
         background.drawRect(0, 0, WIDTH, HEIGHT); // x, y, width, height
 
-        var shadowCastImage = PIXI.Sprite.fromImage('img/back.png'); // Отбрасывающая тень картинка с объектами (черным)
+        var shadowCastImage = PIXI.Sprite.fromImage('img/maze.png'); // Отбрасывающая тень картинка с объектами (черным)
 
         var shadowCasters = new PIXI.Container(); // Контейнер для всех, кто отбрасывает тень
         shadowCasters.addChild(shadowCastImage); // Добавляем туда нашу картинку.
@@ -45,6 +47,7 @@
 
             // Рендер
             renderer.render(stage);
+            
             requestAnimationFrame(animate);
         })();
     }
