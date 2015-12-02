@@ -78,8 +78,8 @@
         });
         // Дополнительные глобалки для задания координат/цвета источников света:
         for (var i = 0; i < CONST_LIGHTS_COUNT; ++i) {
-            SMapFilter.uniforms['uLightPosition[' + i + ']'] = {type: '4fv', value: [0, 0, 256, .3]};
-            SMapFilter.uniforms['uLightColor[' + i + ']'] = {type: '4fv', value: [1, 1, 1, .3]};
+            SMapFilter.uniforms['uLightPosition[' + i + ']'] = {type: '4fv', value: [0, 0, 256, .3]}; // х, у, размер в пикселях и "falloff" уровень падения освещенности
+            SMapFilter.uniforms['uLightColor[' + i + ']'] = {type: '4fv', value: [1, 1, 1, .3]}; // r, g, b, и эмбиент освещение для конкретного источника света.
         }
 
         // Создаем специальный PIXI объект, куда будет рендериться карта теней
